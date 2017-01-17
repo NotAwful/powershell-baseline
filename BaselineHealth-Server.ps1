@@ -9,9 +9,9 @@ them in a write-only network share.
 $TargetList = Get-Content "TargetList.txt"
 $TargetList | ForEach-Object -begin {
     <# This runs before checking any of the targets, so use it to do variables to be used throughout the whole thing #>
-    $checksXML = ("CsPhysicallyInstalledMemory","OsVersion","OsBuildNumber","OsHotfixes")
-    $checksCSV = ("AVProductState") # CSV Values to aquire: AVProductState
-    $date = Get-Date -UFormat %Y-%m-%d
+    $checksXML = ("CsPhysicallyInstalledMemory","OsVersion","OsBuildNumber")
+    $checksCSV = ("AVProductState,HDDSerialNo")
+    [string]$date = Get-Date -UFormat %Y-%m-%d
 } -process {
     $CurrentTarget = $_
     $checksXML | ForEach-Object -begin {
