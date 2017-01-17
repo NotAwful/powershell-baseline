@@ -1,0 +1,23 @@
+# Baseline Health Server Script
+
+# STRUCTURE
+get targets
+foreach-Object vs targets {
+	Begin: List Checks
+		Process: foreach-Object vs XML {
+			begin: does baseline exist?
+			process: do checks, update changelog
+			end: generate alerts if required, or remediation if you're good
+		} Close vs XML
+		Process: foreach-Object vs CSV {
+			begin: does baseline exist?
+			process: do checks, update changelog
+			end: generate alerts if required, or remediation if you're good
+		} Close vs CSV
+	End: Report that baselining checks are done.
+} Close vs targets
+
+# REQUIREMENTS
+Get-ComputerInfo was implemented in Powershell 5.1, so targets need that for this to even be conceptually sound.
+Need a write-only network share for logs to be placed.
+Scheduled powershell job to create baselines.
