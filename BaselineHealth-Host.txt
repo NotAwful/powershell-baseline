@@ -1,9 +1,0 @@
-#Baseline Health Host
-STRUCTURE
-Declare Variables
-XML
-	Get-ComputerInfo & export to WOShare
-CSV
-	Create Object to store values
-	Add Values to Object
-	Object | Export-Csv (-append) to WOShare
