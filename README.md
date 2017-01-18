@@ -23,17 +23,18 @@ CSV
 STRUCTURE 
 ```
 get targets  
+get checks  
 foreach-Object vs targets {  
-	Begin: List Checks  
+	Begin: Create changelog object  
 	Process: foreach-Object vs XML {  
 		begin: does baseline exist?  
 		process: do checks, update changelog  
-		end: generate alerts if required, or remediation if you're good  
+		end: generate alerts if required, or remediation  
 	} Close vs XML  
 	Process: foreach-Object vs CSV {  
 		begin: does baseline exist?  
 		process: do checks, update changelog  
-		end: generate alerts if required, or remediation if you're good  
+		end: generate alerts if required, or remediation  
 	} Close vs CSV  
 	End: Report that baselining checks are done.  
 } Close vs targets  

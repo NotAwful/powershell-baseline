@@ -1,5 +1,4 @@
-﻿<# Baseline Health Server
-###
+﻿<# Baseline Health (Server)
 SUMMARY
 Baseline script to check key values about each machine, keeps track of changes automatically. Runs once a day
 against a target list, all of which have to have a scheduled powershell job to create the baselines and place
@@ -7,10 +6,14 @@ them in a write-only network share.
 #>
 
 $TargetList = Get-Content "TargetList.txt"
+$checksXML = ("CsPhysicallyInstalledMemory","OsVersion","OsBuildNumber")
+$checksCSV = ("AVProductState,HDDSerialNo")
+
 $TargetList | ForEach-Object -begin {
-    $checksXML = ("CsPhysicallyInstalledMemory","OsVersion","OsBuildNumber")
-    $checksCSV = ("AVProductState,HDDSerialNo")
     [string]$date = Get-Date -UFormat %Y-%m-%d
+    $changelog = New-Object PSObject
+    $A = [ordered]@{Date="$date";Item="";OldValue="";NewValue=""}
+    $changelog | Add-Member -NotePropertyMembers $A
 } -process {
     $CurrentTarget = $_
     $checksXML | ForEach-Object -begin {
@@ -22,12 +25,10 @@ $TargetList | ForEach-Object -begin {
         }
     } -process {
         if ($baselineXML.$_ -ne $latestXML.$_) {
-            $changeTemp = New-Object System.Object
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Date" -Value "$date"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Item" -Value "$_"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Old Value" -Value "$baselineXML.$_"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "New Value" -Value "$latestXML.$_"
-            $changeTemp | Export-Csv $CurrentTarget.changelog.csv -append
+            $changelog.Item = $_
+            $changelog.OldValue = $baselineXML.$_
+            $changelog.NewValue = $latestXML.$_
+            $changelog | Export-Csv $CurrentTarget.changelog.csv -append
         }
     } -end {
         if ($baselineXML.CsPhysicallyInstalledMemory -ne $latestXML.CsPhysicallyInstalledMemory) {
@@ -43,12 +44,10 @@ $TargetList | ForEach-Object -begin {
         }
     } -process {
         if ($baselineCSV.$_ -ne $latestCSV.$_) {
-            $changeTemp = New-Object System.Object
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Date" -Value "$date"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Item" -Value "$_"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "Old Value" -Value "$baselineCSV.$_"
-            $changeTemp | Add-Member -MemberType NoteProperty -Name "New Value" -Value "$latestCSV.$_"
-            $changeTemp | Export-Csv $CurrentTarget.changelog.csv -append
+            $changelog.Item = $_
+            $changelog.OldValue = $baselineCSV.$_
+            $changelog.NewValue = $latestCSV.$_
+            $changelog | Export-Csv $CurrentTarget.changelog.csv -append
         }
     } -end {
         if ($baselineCSV.AVProductState -ne $latestCSV.AVProductState) {
