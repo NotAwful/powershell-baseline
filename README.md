@@ -13,11 +13,11 @@ STRUCTURE
 ```
 Declare Variables  
 XML  
-	Get-ComputerInfo & export to WOShare  
+	Get-ComputerInfo | Export-Clixml to WOShare  
 CSV  
 	Create Object to store values  
 	Add Values to Object  
-Object | Export-Csv (-append) to WOShare  
+	Object | Export-Csv (-append) to WOShare  
 ```
 # SERVER
 STRUCTURE 
@@ -25,16 +25,16 @@ STRUCTURE
 get targets  
 foreach-Object vs targets {  
 	Begin: List Checks  
-		Process: foreach-Object vs XML {  
-			begin: does baseline exist?  
-			process: do checks, update changelog  
-			end: generate alerts if required, or remediation if you're good  
-		} Close vs XML  
-		Process: foreach-Object vs CSV {  
-			begin: does baseline exist?  
-			process: do checks, update changelog  
-			end: generate alerts if required, or remediation if you're good  
-		} Close vs CSV  
+	Process: foreach-Object vs XML {  
+		begin: does baseline exist?  
+		process: do checks, update changelog  
+		end: generate alerts if required, or remediation if you're good  
+	} Close vs XML  
+	Process: foreach-Object vs CSV {  
+		begin: does baseline exist?  
+		process: do checks, update changelog  
+		end: generate alerts if required, or remediation if you're good  
+	} Close vs CSV  
 	End: Report that baselining checks are done.  
 } Close vs targets  
 ```
