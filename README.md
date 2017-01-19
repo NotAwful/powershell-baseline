@@ -15,10 +15,10 @@ STRUCTURE
 Declare Variables  
 XML  
 	Get-ComputerInfo | Export-Clixml to WOShare  
-CSV  
+Custom  
 	Create Object to store values  
 	Add Values to Object  
-	Object | Export-Csv (-append) to WOShare  
+	Object | Export-Clixml (-append) to WOShare  
 ```
 # SERVER
 STRUCTURE 
@@ -34,16 +34,16 @@ foreach-Object vs targets {
 		process: compare, update changelog  
 		end: generate alerts if required, or remediation  
 	} Close vs XML  
-	Process: foreach-Object vs CSV {  
+	Process: foreach-Object vs Custom {  
 		begin: does baseline exist?  
 			yes: import base/latest  
 			no: rename latest to baseline  
 		process: compare, update changelog  
 		end: generate alerts if required, or remediation  
-	} Close vs CSV  
+	} Close vs Custom  
 	End: Report that baselining checks are done  
 } Close vs targets  
 ```
 
 # TO-DO
-Server: Create Event Logic, Baseline-setting (need to work out logic for automating this), 
+Server: Create Event Logic

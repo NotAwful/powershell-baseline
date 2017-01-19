@@ -5,9 +5,12 @@ against a target list, all of which have to have a scheduled powershell job to c
 them in a write-only network share.
 #>
 
+<# USER SET #>
 $TargetList = Get-Content "TargetList.txt"
+$importPath = "C:\test"
+$logPath = "C:\test\logs"
 $checksXML = ("CsPhysicallyInstalledMemory","OsVersion","OsBuildNumber")
-$checksCSV = ("AVProductState,HDDSerialNo")
+$checksCustom = ("AVProductState,HDDSerialNo")
 
 $TargetList | ForEach-Object -begin {
     [string]$date = Get-Date -UFormat %Y-%m-%d
@@ -18,11 +21,11 @@ $TargetList | ForEach-Object -begin {
     $CurrentTarget = $_
     $checksXML | ForEach-Object -begin {
         if ((Test-Path "\\WOShare\$CurrentTarget.*.baseline.xml") -eq $true) {
-            $baselineXML = (Import-CliXml "\\WOShare\$CurrentTarget.*.baseline.xml")
-            $latestXML = (Import-CliXml \\WOShare\$CurrentTarget.$date.xml)
+            $baselineXML = (Import-CliXml "$importPath\$CurrentTarget.*.baseline.xml")
+            $latestXML = (Import-CliXml $importPath\$CurrentTarget.$date.xml)
         } else {
-            Rename-Item -Path "\\WOShare\$CurrentTarget.$date.xml" -NewName "$CurrentTarget.$date.baseline.xml"
-            $baselineXML = (Import-CliXml "\\WOShare\$CurrentTarget.$date.baseline.xml")
+            Rename-Item -Path "$importPath\$CurrentTarget.$date.xml" -NewName "$CurrentTarget.$date.baseline.xml"
+            $baselineXML = (Import-CliXml "$importPath\$CurrentTarget.$date.baseline.xml")
             $latestXML = ""
         }
     } -process {
@@ -30,37 +33,37 @@ $TargetList | ForEach-Object -begin {
             $changelog.Item = $_
             $changelog.BaseValue = $baselineXML.$_
             $changelog.LatestValue = $latestXML.$_
-            $changelog | Export-Csv $CurrentTarget.changelog.csv -append
+            $changelog | Export-Csv "$logPath\$CurrentTarget.changelog.csv" -append
         }
     } -end {
         if ($baselineXML.CsPhysicallyInstalledMemory -ne $latestXML.CsPhysicallyInstalledMemory) {
             <# Write event to event log, triggering scheduled task to alert IT that RAM has changed #>
         }
     } #End XML block
-    $checkCSV | ForEach-Object -begin {
-        if ((Test-Path "\\WOShare\$CurrentTarget.*.baseline.csv") -eq $true) {
-            $baselineCSV = (Import-CSV "\\WOShare\$CurrentTarget.*.baseline.csv")
-            $latestCSV = (Import-CSV "\\WOShare\$CurrentTarget.$date.csv")
+    $checkCustom | ForEach-Object -begin {
+        if ((Test-Path "$importPath\$CurrentTarget.*.custom.baseline.xml") -eq $true) {
+            $baselineCustom = (Import-CliXml "$importPath\$CurrentTarget.*.custom.baseline.xml")
+            $latestCustom = (Import-CliXml "$importPath\$CurrentTarget.$date.custom.xml")
         } else {
-            Rename-Item -Path "\\WOShare\$CurrentTarget.$date.csv" -NewName "$CurrentTarget.$date.baseline.csv"
-            $baselineCSV = (Import-CSV "\\WOShare\$CurrentTarget.$date.baseline.csv")
-            $latestCSV = ""
+            Rename-Item -Path "$importPath\$CurrentTarget.$date.custom.xml" -NewName "$CurrentTarget.$date.custom.baseline.xml"
+            $baselineCustom = (Import-CSV "$importPath\$CurrentTarget.$date.custom.baseline.xml")
+            $latestCustom = ""
         }
     } -process {
-        if ($baselineCSV.$_ -ne $latestCSV.$_) {
+        if ($baselineCustom.$_ -ne $latestCustom.$_) {
             $changelog.Item = $_
-            $changelog.BaseValue = $baselineCSV.$_
-            $changelog.LatestValue = $latestCSV.$_
-            $changelog | Export-Csv $CurrentTarget.changelog.csv -append
+            $changelog.BaseValue = $baselineCustom.$_
+            $changelog.LatestValue = $latestCustom.$_
+            $changelog | Export-Csv "$logPath\$CurrentTarget.changelog.csv" -append
         }
     } -end {
-        if ($baselineCSV.AVProductState -ne $latestCSV.AVProductState) {
+        if ($baselineCustom.AVProductState -ne $latestCustom.AVProductState) {
             <# Write event to event log, triggering scheduled task to alert IT that active AVs have changed #>
         }
-        if ($baselineCSV.HDDSerialNo -ne $latestCSV.HDDSerialNo) {
+        if ($baselineCustom.HDDSerialNo -ne $latestCustom.HDDSerialNo) {
             <# Write event to event log, triggering scheduled task to alert IT that installed disks have changed #>
         }
-    } #End CSV Block
+    } #End Custom Block
 } -end {
     <## Reporting ##>
 }
