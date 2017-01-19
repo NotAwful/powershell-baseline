@@ -12,22 +12,24 @@ $checksCSV = ("AVProductState,HDDSerialNo")
 $TargetList | ForEach-Object -begin {
     [string]$date = Get-Date -UFormat %Y-%m-%d
     $changelog = New-Object PSObject
-    $A = [ordered]@{Date="$date";Item="";OldValue="";NewValue=""}
+    $A = [ordered]@{Date="$date";Item="";BaseValue="";LatestValue=""}
     $changelog | Add-Member -NotePropertyMembers $A
 } -process {
     $CurrentTarget = $_
     $checksXML | ForEach-Object -begin {
-        $latestXML = (Import-CliXml \\WOShare\$CurrentTarget.$date.xml)
-        if ((TestPath "\\WOShare\$CurrentTarget.*.baseline.xml") -eq $true) {
-            $baselineXML = Import-CliXml "\\WOShare\$CurrentTarget.*.baseline.xml"
+        if ((Test-Path "\\WOShare\$CurrentTarget.*.baseline.xml") -eq $true) {
+            $baselineXML = (Import-CliXml "\\WOShare\$CurrentTarget.*.baseline.xml")
+            $latestXML = (Import-CliXml \\WOShare\$CurrentTarget.$date.xml)
         } else {
-            #Rename the current XML to be the baseline XML, then set $baselineXML as normal
+            Rename-Item -Path "\\WOShare\$CurrentTarget.$date.xml" -NewName "$CurrentTarget.$date.baseline.xml"
+            $baselineXML = (Import-CliXml "\\WOShare\$CurrentTarget.$date.baseline.xml")
+            $latestXML = ""
         }
     } -process {
         if ($baselineXML.$_ -ne $latestXML.$_) {
             $changelog.Item = $_
-            $changelog.OldValue = $baselineXML.$_
-            $changelog.NewValue = $latestXML.$_
+            $changelog.BaseValue = $baselineXML.$_
+            $changelog.LatestValue = $latestXML.$_
             $changelog | Export-Csv $CurrentTarget.changelog.csv -append
         }
     } -end {
@@ -36,17 +38,19 @@ $TargetList | ForEach-Object -begin {
         }
     } #End XML block
     $checkCSV | ForEach-Object -begin {
-        $lastestCSV = (Import-CSV \\WOShare\$CurrentTarget.$date.CSV)
-        if ((TestPath "\\WOShare\$CurrentTarget.*.baseline.csv") -eq $true) {
-            $baselineCSV = "\\WOShare\$CurrentTarget.*.baseline.csv"
+        if ((Test-Path "\\WOShare\$CurrentTarget.*.baseline.csv") -eq $true) {
+            $baselineCSV = (Import-CSV "\\WOShare\$CurrentTarget.*.baseline.csv")
+            $latestCSV = (Import-CSV "\\WOShare\$CurrentTarget.$date.csv")
         } else {
-            #Rename the current CSV to be the baseline CSV, then set $baselineCSV as normal
+            Rename-Item -Path "\\WOShare\$CurrentTarget.$date.csv" -NewName "$CurrentTarget.$date.baseline.csv"
+            $baselineCSV = (Import-CSV "\\WOShare\$CurrentTarget.$date.baseline.csv")
+            $latestCSV = ""
         }
     } -process {
         if ($baselineCSV.$_ -ne $latestCSV.$_) {
             $changelog.Item = $_
-            $changelog.OldValue = $baselineCSV.$_
-            $changelog.NewValue = $latestCSV.$_
+            $changelog.BaseValue = $baselineCSV.$_
+            $changelog.LatestValue = $latestCSV.$_
             $changelog | Export-Csv $CurrentTarget.changelog.csv -append
         }
     } -end {
